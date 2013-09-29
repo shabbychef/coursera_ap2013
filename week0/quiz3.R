@@ -25,10 +25,12 @@ q1 <- c(100 * mean(pry$Return),
 				100 * sd(pry$Tbill),
 				100 * sd(pry$excess.Ret))
 qprint(q1)
+#  11.59299 3.950057 7.642932 20.31285 3.439518 20.63309 
 
 # question 2, SR
 sr <- mean(pry$excess.Ret) / sd(pry$excess.Ret)
 qprint(sr)
+#  0.3704212 
 				
 # question 3, plots, acf
 acf(pry$Return)
@@ -83,8 +85,8 @@ qprint(round(lmsum2(regx,regy),2))
 
 
 # question 6
-qprint(summary(foomod))
-# yes, yes
+print(summary(foomod))
+# yes, no apparently?
 
 # question 7
 
@@ -113,19 +115,16 @@ bret.exc <- bret.stock - bret.bond
 regy <- bret.exc[(wins+1):length(bret.exc)]
 regx <- pry$DbyP[1:(dim(pry)[1] - wins)]
 
-foomod <- lm(regx ~ regy)
+foomod <- lm(regy ~ regx)
 lmres <- round(lmsum(foomod),2)
 qprint(lmres)
 
 # apparently the 0.01 is wrong. bad annualization?
-# 0.01 4.99 0.24
+#  19.03 4.99 0.24 
 foomod.overlap <- foomod
 
 # question 8
-#  cause and effect OK
-#  rut-roh
-#  uncorrelated errors?
-#  maybe my variables are off...
+#  errors are uncorrelated with the RHS. only.
 
 # not uncorrelated:
 plot(regx,foomod$residuals)
@@ -155,10 +154,10 @@ xrow <- yrow - wins
 regy <- bret.exc[yrow]
 regx <- pry$DbyP[xrow]
 
-foomod <- lm(regx ~ regy)
+foomod <- lm(regy ~ regx)
 lmres <- round(lmsum(foomod),2)
 qprint(lmres)
-#  0.01 2.52 0.3 
+#  21.61 2.52 0.3 
 #  once again, the 0.01 is wrong. bummer.
 
 # question 11
@@ -172,24 +171,27 @@ ploty <- cbind(regy,predicted)
 plot(t(cbind(TEO[yrow],TEO[yrow])),
 		 t(matrix(ploty,ncol=2)),col=c('red','blue'))
 
-# fuck that. as xts?
+## fuck that. as xts?
 
-require(xts)
+#require(xts)
 
-rxts <- xts(ploty,order.by=TEO[yrow])
-plot(rxts)
+#rxts <- xts(ploty,order.by=TEO[yrow])
+#plot(rxts)
 
-# FUCK.
-plot(rxts$regy)
-par(new=TRUE)
-plot(rxts$predicted,axes=FALSE)  # that the trick?
+## FUCK.
+#plot(rxts$regy)
+#par(new=TRUE)
+#plot(rxts$predicted,axes=FALSE)  # that the trick?
 
 # d/p varies less;
 #
 # apparently: dividend yield forecasts 5-10 year swings early,
 # but seems to slow down.
 # I don't see this by eye, but whatever.
-# 
+#
+#
+#snide comment around question 12 is priceless:
+
 
 
 #for vim modeline: (do not edit)
