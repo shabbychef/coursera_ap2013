@@ -1,6 +1,6 @@
-# Week 7 Homework 1: 
+# Week 7 Homework 2: 
 #
-# * Wed Nov 20 2013 01:48:39 PM Steven E. Pav <steven@cerebellumcapital.com>
+# * Sat Nov 23 2013 08:16:55 PM Steven E. Pav <steven@cerebellumcapital.com>
 #
 
 
@@ -21,12 +21,14 @@ fbliss <- really.read.delim(fb.url,
 											 check.names=FALSE,
 											 col.names=c("date","price1","price2","price3","price4","price5"))
 
-fbliss <- read.delim(fb.url,comment.char='%',header=FALSE)
 
 require(xts)
 TEO <- as.Date(as.character(fbliss$date),"%Y%m%d")
 TEO <- as.POSIXct(TEO)
 fxts <- xts(fbliss[,!(colnames(fbliss) %in% "date")],order.by=TEO)
+
+# all Q's start in 1964...
+fxts <- fxts["1964-01-30::2013-06-27",]
 
 # ok, finally. 
 # divide by 100, then take the log
@@ -38,128 +40,98 @@ yield <- -log.p / col(fxts)
 # the forward prices
 forward <- t(- apply(t(log.p),2,diff))
 
+# the returns
+rets <- log.p[13:nrow(log.p),1:(ncol(log.p)-1)] - as.matrix(log.p[1:(nrow(log.p)-12),2:(ncol(log.p))])
+
+# excess returns
+rets.x <- rets - rep(as.matrix(yield[1:(nrow(rets)),1]),ncol(rets))
+
 # Question 1#FOLDUP
-# average log yield
-ans <- 100 * colMeans(yield) 
-fdisp(ans)
-#  5.08 5.278 5.456 5.601 5.704 
+# this neglects sweeping the means out. duh!
+decomp <- svd(as.matrix(rets.x))
+fdisp(decomp$d)
+#  WRONG: 1.423 0.4386 0.266 0.2296 
 
-# OOPS. start at observation 140; duh;
-sub.xts <- fxts["1964-01-30::2013-06-27",]
-log.p <- log((1/100) * sub.xts)
+dets.x <- sweep(as.matrix(rets.x), 2, apply(as.matrix(rets.x), 2, mean))
 
-# compute the yields
-yield <- -log.p / col(sub.xts)
-
-# average log yield
-ans <- 100 * colMeans(yield) 
-fdisp(ans)
-#  5.631 5.842 6.022 6.177 6.285 
-
+# hmm. ok.
+Sigma <- cov(rets.x)
+Q <- eigen(Sigma)
+fdisp(100 * sqrt(Q$values))
 #UNFOLD
 
 # Question 2#FOLDUP
-# annual log returns
-sub.xts <- fxts["1964-01-30::2013-06-27",]
-head(sub.xts)
-tail(sub.xts)
-
-sub.log.p <- log((1/100) * sub.xts)
-rets <- sub.log.p[13:nrow(sub.log.p),1:(ncol(sub.log.p)-1)] - as.matrix(sub.log.p[1:(nrow(sub.log.p)-12),2:(ncol(sub.log.p))])
-
-# excess returns
-sub.yield <- - sub.log.p[1:(nrow(sub.log.p)-12),1]
-rets.x <- rets - rep(as.matrix(sub.yield),ncol(rets))
-
-require(SharpeR)
-
-as.sr(rets.x)
-# oik
-
-mu <- apply(rets.x,2,mean)
-sg <- apply(rets.x,2,sd)
-sr <- mu / sg
-fdisp(sr)
+decomp <- svd(as.matrix(rets.x),nv=1)
+fdisp(decomp$v)
+#  0.213 0.4022 0.5637 0.6893 
 #UNFOLD
 
 # Question 3#FOLDUP
-# the forward prices
-sub.forward <- t(- apply(t(sub.log.p),2,diff))
+resu <- NULL
+decomp <- svd(as.matrix(rets.x))
+xv <- as.matrix(decomp$u[,1])
 
-reg.y <- rets.x
-reg.x <- sub.forward - rep(as.matrix(- sub.log.p[,1]),ncol(sub.forward))
-reg.x <- reg.x[1:(nrow(reg.x)-12),]
-
-b.vals <- rep(NA,ncol(reg.x))
-
-for (iii in 1:ncol(reg.x)) {
-	sub.x <- reg.x[,iii]
-	sub.y <- reg.y[,iii]
-	foo.mod <- lm(sub.y ~ sub.x)
-	b.vals[iii] <- foo.mod$coefficients[2] 
+for (iii in c(1:4)) {
+	yv <- as.matrix(rets.x[,iii])
+	amod <- lm(yv ~ xv)
+	amod.s <- summary(amod)
+	resu <- c(resu,amod.s$r.squared)
 }
-fdisp(b.vals)
-reg1 <- b.vals
-#  0.8355 1.146 1.394 1.14 
+xv <- as.matrix(decomp$u[,(1:2)],nrow=dim(rets.x)[1])
+for (iii in c(1:4)) {
+	yv <- as.matrix(rets.x[,iii])
+	amod <- lm(yv ~ xv)
+	amod.s <- summary(amod)
+	resu <- c(resu,amod.s$r.squared)
+}
+fdisp(resu)
+#  0.9216 0.9799 0.9972 0.9929 0.9883 0.9976 0.9975 0.9995 
 #UNFOLD
 
 # Question 4#FOLDUP
-yield.one <- - sub.log.p[,1]
-b.vals <- rep(NA,ncol(reg.x))
+decomp <- svd(as.matrix(rets.x))
+plot(decomp$v[,1])
 
-for (iii in 1:ncol(reg.x)) {
-	nshift <- 12*iii
-	sub.y <- yield.one[(1+nshift):nrow(yield.one),] - as.matrix(yield.one[1:(nrow(yield.one)-nshift),])
-	sub.x <- reg.x[1:length(sub.y),iii]
-	foo.mod <- lm(sub.y ~ sub.x)
-	b.vals[iii] <- foo.mod$coefficients[2] 
-}
-fdisp(b.vals)
-#  0.1645 0.5035 0.7674 0.895 
-reg2 <- b.vals
+# Unlike yields, the first factor loadings rise almost linearly with maturity. The second factor has a curved as well as slope shape. Factors three and four are tiny without economic pattern. The two factors together account for 99% of the variance of returns.
 
-reg1 + reg2
 #UNFOLD
 
 # Question 5#FOLDUP
-# I believe the answer is that
-# z = 1, x = n-1, w = x
+a <- 0.06
+rho <- 0.95
+phi <- 0.60
 
-resu <- NULL
-for (n.val in (4:5)) {
-	z <- 1
-	x <- n.val - 1
-	w <- x
-	resu <- c(resu,c(w,x,z))
+evl <- function(nn,a=0.06,rho=0.95,phi=0.60) {
+	#resu <- a + rho^(nn-1) + phi^(nn-1)
+	resu <- c(rho^(nn-1),phi^(nn-1))
 }
-fdisp(resu)
-#  3 3 1 4 4 1 
+
+f2 <- evl(2)
+f3 <- evl(3)
+
+fdisp(c(f2,f3))
+#  0.95 0.6 0.9025 0.36 
+
 #UNFOLD
 
 # Question 6#FOLDUP
-# I think we have x=n, z=n-1, w=n-1, v=n-1
-resu <- NULL
-for (n.val in (4:5)) {
-	x <- n.val
-	z <- n.val-1
-	w <- n.val-1
-	v <- n.val-1
-	resu <- c(resu,c(x,z,w,v))
+a <- 0.06
+rho <- 0.95
+phi <- 0.60
+
+evl <- function(nn,a=0.06,rho=0.95,phi=0.60) {
+	rp <- function(fc) {
+		(1 - fc^(nn)) / (1-fc) 
+	}
+	resu <- c(rp(rho),rp(phi)) / nn
 }
-fdisp(resu)
-#  4 3 3 3 5 4 4 4 
-#UNFOLD
 
-# Question 7#FOLDUP
-# aiii! what?
-# assume the return is the forward rate? ack.
-p.t1 <- c(-0.05,-0.15,-0.30,-0.45)
-f.rat <- diff(p.t1)
-e.val <- p.t1[2:length(p.t1)] - f.rat
-fdisp(e.val)
-#  -0.05 -0.15 -0.3 
-#UNFOLD
+y2 <- evl(2)
+y3 <- evl(3)
 
+fdisp(c(y2,y3))
+#  0.975 0.8 0.9508 0.6533 
+#UNFOLD
 
 #for vim modeline: (do not edit)
 # vim:fdm=marker:fmr=FOLDUP,UNFOLD:cms=#%s:syn=r:ft=r
