@@ -38,7 +38,10 @@ fq3 <- function(myp=params) {
 	return(retv)
 }
 fdisp(fq3())
+# this came out wrong, but I think it is a units problem?
+# try to multiply by 100 instead
 #  0.05813 
+fdisp(100 * fq3())
 
 
 # Question 4
@@ -212,7 +215,13 @@ fdisp(q15.ans)
 E.t1.yields <- -diff(c(0,Elog.ps))
 q16.ans <- c(E.t1.yields[1],UNKNOWN)
 fdisp(q16.ans)
+# somehow the 0.2 is wrong here. dunno what or why. will see...
+# WRONG:
 #  0.2 99 
+# probably should have been the forward, not the yield. duh.
+q16.ans <- c(E.t1.yields[2],UNKNOWN)
+fdisp(q16.ans)
+#  0.1 99 
 
 # Question 17
 # Fama Bliss Regressions
@@ -285,6 +294,54 @@ fdisp(Lh[1] / sum(Lh))
 
 
 #UNFOLD
+
+# Question 6 parts a-c
+# this looks like the HW from week7 Discrete-time Vasicek meets Fama and Bliss
+
+params = list(theta=1,lambda=50,sigma.e=0.10,epsilon.t=0.01,epsilon.tm1=0.01,Xt=0.02)
+
+# OOOPS, except it isn't. start again
+
+# Question 21
+q6.p1 <- function(myp=params) {
+  # first bond (log) prices are - xt
+  logp <- - myp$Xt
+  return(logp)
+}
+q21.ans <- 100 * (- q6.p1(params))
+fdisp(q21.ans)
+# 2
+
+# Question 22
+q6.p2 <- function(myp=params) {
+  # no. not this:
+  # p(2)t=12σ2ε+[λ1σ2ε−(1+ϕ)]xt 
+  #logp <- 0.5 * myp$sigma.e^2 + (myp$lambda * myp$sigma.e^2 - (1 + myp$theta)) * myp$Xt
+  logp <- 0.5 * myp$sigma.e^2 + (myp$lambda * myp$sigma.e^2 - 1) * myp$Xt - myp$theta * myp$epsilon.t
+  return(logp)
+}
+logp1 <- q6.p1()
+logp2 <- q6.p2()
+fwd.rate <- logp1 - logp2
+q22.ans <- 100 * fwd.rate
+fdisp(q22.ans)
+# -0.5
+
+# Question 23
+# note that the *expected* value of p^1_{t+1} is E[x_t+1] = E[epsilon_t+1] + Theta * epsilon.t
+Extp1 <- 0 + params$theta * params$epsilon.t
+p1tp1 <- - Extp1
+Eytp1 <- - p1tp1
+p2t <- q6.p2()
+
+Er2tp1 <- p1tp1 - p2t
+
+q23.ans <- 100 * c(Eytp1,Er2tp1)
+fdisp(q23.ans)
+# 1 0.5
+
+
+
 
 #for vim modeline: (do not edit)
 # vim:fdm=marker:fmr=FOLDUP,UNFOLD:cms=#%s:syn=r:ft=r
