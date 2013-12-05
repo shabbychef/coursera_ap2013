@@ -185,6 +185,57 @@ fdisp(fq11())
 
 #UNFOLD
 
+# Question 4 parts a-d
+UNKNOWN <- 99
+
+# Question 14
+log.ps <- c(-0.10,-0.30,-0.40)
+# compute yields at time t
+yields <- - log.ps / c(1,2,3)
+fwds <- -diff(log.ps)
+
+q14.ans <- -diff(c(0,log.ps))
+fdisp(q14.ans)
+#  0.1 0.2 0.1 
+
+# Question 15
+# Expectations hypothesis
+Elog.ps <- log.ps[2:3] - log.ps[1]
+E2log.ps <- Elog.ps[2] - Elog.ps[1]
+q15.ans <- c(-Elog.ps[1],-E2log.ps[1],UNKNOWN)
+
+fdisp(q15.ans)
+#  0.2 0.1 99 
+
+# Question 16
+# forward rates
+E.t1.yields <- -diff(c(0,Elog.ps))
+q16.ans <- c(E.t1.yields[1],UNKNOWN)
+fdisp(q16.ans)
+#  0.2 99 
+
+# Question 17
+# Fama Bliss Regressions
+# returns <- b * (f? - y1)
+# y_{t+1} - y_t <- b * (f? - ?)
+
+# try to do the forward
+yandf <- -diff(c(0,log.ps))
+del.fwd <- yandf[2] - yandf[1]
+# 'future spot regression.' I think.
+beta.fwd <- 0
+dely <- beta.fwd * del.fwd
+next.oyrate <- yields[1] + dely
+exp.2yr <- 0
+# 'excess return regression.' I think
+beta.exr <- 1
+rtp1.2 <- beta.exr * del.fwd
+
+
+q17.ans <- c(next.oyrate,rtp1.2)
+fdisp(q17.ans)
+#  0.1 0.1 
+
 # Question 5 parts a-c#FOLDUP
 
 irt2 <- 1 / sqrt(2)
