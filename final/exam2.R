@@ -40,8 +40,11 @@ fq3 <- function(myp=params) {
 fdisp(fq3())
 # this came out wrong, but I think it is a units problem?
 # try to multiply by 100 instead
+# WRONG:
 #  0.05813 
 fdisp(100 * fq3())
+# WRONG: this was also wrong. WTF..
+# 5.8125
 
 
 # Question 4
@@ -283,6 +286,8 @@ foomod2 <- lm(X1 ~ f1)
 sfoo <- summary(foomod2)
 fdisp(sfoo$r.squared)
 #  0.6624 
+# I entered 
+# 0.666
 
 # shouldn't it be one of these? harumph
 L1 <- diag(Lam)
